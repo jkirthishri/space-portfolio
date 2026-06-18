@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirthishri Jeevanandam — Mission Log</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg-0:#070912;
+    --bg-1:#0c1020;
+    --star:#E8E6E0;
+    --star-dim:#9aa0b4;
+    --gold:#D9A24B;
+    --gold-dim:#7a5f33;
+    --teal:#4FB8AE;
+    --rose:#C77B6F;
+    --line:rgba(232,230,224,0.12);
+    --panel:rgba(14,18,32,0.92);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background:var(--bg-0);
+    color:var(--star);
+    font-family:'Space Mono', monospace;
+    overflow:hidden;
+  }
+
+  #app{
+    position:relative;
+    width:100%;
+    height:100vh;
+  }
+
+  /* ---------- Starfield ---------- */
+  #starfield{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(79,184,174,0.05), transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(217,162,75,0.05), transparent 50%),
+      var(--bg-0);
+    overflow:hidden;
+  }
+  .star{
+    position:absolute;
+    border-radius:50%;
+    background:var(--star);
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:0.2;}
+    50%{opacity:1;}
+  }
+
+  /* ---------- Header ---------- */
+  #header{
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    z-index:20;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:28px 36px;
+    pointer-events:none;
+  }
+  #header .title-block{
+    pointer-events:auto;
+  }
+  #header .eyebrow{
+    font-size:11px;
+    letter-spacing:0.18em;
+    color:var(--teal);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  #header h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:28px;
+    margin:0;
+    color:var(--star);
+    letter-spacing:0.01em;
+  }
+  #header .sub{
+    font-size:12px;
+    color:var(--star-dim);
+    margin-top:6px;
+    max-width:420px;
+    line-height:1.5;
+  }
+
+  #header-right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+    pointer-events:auto;
+  }
+
+  .pill-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--star-dim);
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:8px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .pill-btn:hover{
+    border-color:var(--gold);
+    color:var(--gold);
+  }
+  .pill-btn.active{
+    border-color:var(--gold);
+    color:var(--gold);
+    background:rgba(217,162,75,0.08);
+  }
+
+  /* ---------- Orbit system ---------- */
+  #orbit-container{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #orbit-system{
+    position:relative;
+    width:1px;
+    height:1px;
+  }
+
+  .orbit-ring{
+    position:absolute;
+    top:50%;
+    left:50%;
+    border:1px dashed var(--line);
+    border-radius:50%;
+    transform-style:preserve-3d;
+  }
+
+  .sun{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:96px;
+    height:96px;
+    margin-left:-48px;
+    margin-top:-48px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ffe3a8, var(--gold) 55%, #a8742f 100%);
+    box-shadow:0 0 60px 18px rgba(217,162,75,0.35), 0 0 120px 40px rgba(217,162,75,0.12);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    z-index:5;
+    transition:transform 0.3s ease;
+  }
+  .sun:hover{ transform:scale(1.05); }
+  .sun-label{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:13px;
+    color:#2a1c08;
+    line-height:1.2;
+  }
+
+  .orbit-path{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    border:1px dashed var(--line);
+    border-radius:50%;
+    pointer-events:none;
+  }
+
+  .planet-wrap{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:0;
+    height:0;
+  }
+  .planet-orbit-motion{
+    position:absolute;
+    top:0;
+    left:0;
+    width:0;
+    height:0;
+    animation-timing-function:linear;
+    animation-iteration-count:infinite;
+  }
+  .planet{
+    position:absolute;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .planet:hover{
+    transform:scale(1.18);
+  }
+  .planet .ring{
+    position:absolute;
+    border:2px solid;
+    border-radius:50%;
+    opacity:0.55;
+    pointer-events:none;
+  }
+  .planet-tag{
+    position:absolute;
+    top:100%;
+    margin-top:8px;
+    white-space:nowrap;
+    font-size:10px;
+    letter-spacing:0.04em;
+    color:var(--star-dim);
+    text-align:center;
+    left:50%;
+    transform:translateX(-50%);
+    opacity:0;
+    transition:opacity 0.2s ease;
+    pointer-events:none;
+  }
+  .planet-wrap:hover .planet-tag{ opacity:1; }
+
+  /* category colors */
+  .cat-education .planet{ background:radial-gradient(circle at 35% 30%, #8fd6f0, var(--teal) 60%, #1f6e67); box-shadow:0 0 22px rgba(79,184,174,0.45);}
+  .cat-internship .planet{ background:radial-gradient(circle at 35% 30%, #f3c98a, var(--gold) 60%, #7a5320); box-shadow:0 0 22px rgba(217,162,75,0.45);}
+  .cat-hackathon .planet{ background:radial-gradient(circle at 35% 30%, #e8a89c, var(--rose) 60%, #6e3a32); box-shadow:0 0 22px rgba(199,123,111,0.45);}
+  .cat-certification .planet{ background:radial-gradient(circle at 35% 30%, #cfd3e6, #8d93b8 60%, #494d6b); box-shadow:0 0 16px rgba(141,147,184,0.4);}
+  .cat-project .planet{ background:radial-gradient(circle at 35% 30%, #b9e8b0, #6fae62 60%, #345229); box-shadow:0 0 20px rgba(111,174,98,0.45);}
+
+  .cat-education .ring{ border-color:rgba(79,184,174,0.5); }
+  .cat-internship .ring{ border-color:rgba(217,162,75,0.5); }
+  .cat-hackathon .ring{ border-color:rgba(199,123,111,0.5); }
+  .cat-certification .ring{ border-color:rgba(141,147,184,0.5); }
+  .cat-project .ring{ border-color:rgba(111,174,98,0.5); }
+
+  /* ---------- Legend ---------- */
+  #legend{
+    position:absolute;
+    bottom:28px;
+    left:36px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    z-index:20;
+    font-size:11px;
+    color:var(--star-dim);
+  }
+  #legend .legend-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  #legend .dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  #legend .dot.education{ background:var(--teal); }
+  #legend .dot.internship{ background:var(--gold); }
+  #legend .dot.hackathon{ background:var(--rose); }
+  #legend .dot.certification{ background:#8d93b8; }
+  #legend .dot.project{ background:#6fae62; }
+
+  /* ---------- Detail Panel ---------- */
+  #detail-panel{
+    position:absolute;
+    top:0;
+    right:0;
+    height:100vh;
+    width:420px;
+    max-width:92vw;
+    background:var(--panel);
+    border-left:1px solid var(--line);
+    backdrop-filter:blur(6px);
+    transform:translateX(100%);
+    transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    z-index:50;
+    overflow-y:auto;
+    padding:36px 30px;
+  }
+  #detail-panel.open{ transform:translateX(0); }
+
+  #detail-panel .close-btn{
+    position:absolute;
+    top:24px;
+    right:24px;
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--star-dim);
+    cursor:pointer;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all 0.2s ease;
+  }
+  #detail-panel .close-btn:hover{
+    border-color:var(--star);
+    color:var(--star);
+  }
+
+  #detail-panel .cat-tag{
+    font-size:10px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    margin-bottom:14px;
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+  }
+  #detail-panel h2{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:26px;
+    line-height:1.25;
+    margin:0 0 6px 0;
+  }
+  #detail-panel .meta{
+    font-size:11px;
+    color:var(--star-dim);
+    margin-bottom:22px;
+  }
+  #detail-panel img{
+    width:100%;
+    border-radius:8px;
+    margin-bottom:20px;
+    border:1px solid var(--line);
+    display:block;
+  }
+  #detail-panel .desc{
+    font-family:'Fraunces', serif;
+    font-size:15px;
+    line-height:1.7;
+    color:var(--star);
+    white-space:pre-wrap;
+  }
+  #detail-panel .panel-actions{
+    margin-top:26px;
+    display:flex;
+    gap:10px;
+  }
+
+  /* ---------- Owner mode / lock ---------- */
+  #lock-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(7,9,18,0.85);
+    backdrop-filter:blur(4px);
+    z-index:200;
+    display:none;
+    align-items:center;
+    justify-content:center;
+  }
+  #lock-overlay.open{ display:flex; }
+  #lock-box{
+    background:var(--bg-1);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:32px;
+    width:320px;
+    text-align:center;
+  }
+  #lock-box .eyebrow{
+    font-size:10px;
+    letter-spacing:0.14em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  #lock-box h3{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    margin:0 0 18px 0;
+    font-size:18px;
+  }
+  #lock-box input{
+    width:100%;
+    background:var(--bg-0);
+    border:1px solid var(--line);
+    color:var(--star);
+    padding:10px 12px;
+    border-radius:6px;
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    margin-bottom:14px;
+  }
+  #lock-box input:focus{ outline:none; border-color:var(--gold); }
+  #lock-box .lock-actions{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+  }
+  #lock-box .err{
+    font-size:11px;
+    color:var(--rose);
+    margin-top:10px;
+    min-height:14px;
+  }
+
+  /* ---------- Add Planet Form ---------- */
+  #add-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(7,9,18,0.85);
+    backdrop-filter:blur(4px);
+    z-index:200;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  #add-overlay.open{ display:flex; }
+  #add-box{
+    background:var(--bg-1);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:32px;
+    width:480px;
+    max-width:100%;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  #add-box .eyebrow{
+    font-size:10px;
+    letter-spacing:0.14em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  #add-box h3{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    margin:0 0 22px 0;
+    font-size:20px;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--star-dim);
+    margin-bottom:6px;
+  }
+  .field input, .field textarea, .field select{
+    width:100%;
+    background:var(--bg-0);
+    border:1px solid var(--line);
+    color:var(--star);
+    padding:10px 12px;
+    border-radius:6px;
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    resize:vertical;
+  }
+  .field textarea{ min-height:90px; line-height:1.5; }
+  .field input:focus, .field textarea:focus, .field select:focus{
+    outline:none; border-color:var(--gold);
+  }
+  .field-row{ display:flex; gap:12px; }
+  .field-row .field{ flex:1; }
+
+  #img-preview{
+    margin-top:8px;
+    max-width:100%;
+    max-height:140px;
+    border-radius:6px;
+    display:none;
+    border:1px solid var(--line);
+  }
+
+  .btn{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:10px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--star);
+    transition:all 0.2s ease;
+  }
+  .btn:hover{ border-color:var(--star); }
+  .btn.primary{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#211505;
+    font-weight:700;
+  }
+  .btn.primary:hover{ background:#e6b260; }
+  .btn.danger{ color:var(--rose); border-color:rgba(199,123,111,0.4); }
+  .btn.danger:hover{ border-color:var(--rose); }
+
+  #add-box .form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:22px;
+  }
+
+  /* ---------- Empty state hint ---------- */
+  #empty-hint{
+    position:absolute;
+    bottom:28px;
+    right:36px;
+    z-index:20;
+    font-size:11px;
+    color:var(--star-dim);
+    max-width:240px;
+    text-align:right;
+    line-height:1.5;
+    display:none;
+  }
+
+  /* ---------- Loading ---------- */
+  #loading-msg{
+    position:absolute;
+    bottom:28px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:11px;
+    color:var(--star-dim);
+    z-index:20;
+  }
+
+  /* ---------- Scrollbar ---------- */
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
+
+  @media (max-width:720px){
+    #header{ flex-direction:column; gap:14px; padding:20px; }
+    #header-right{ align-items:flex-start; flex-direction:row; }
+    #detail-panel{ width:100%; }
+    #legend{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="starfield"></div>
+
+  <div id="header">
+    <div class="title-block">
+      <div class="eyebrow">Mission Log // Engineering Career</div>
+      <h1>Kirthishri Jeevanandam</h1>
+      <div class="sub">Software Engineer — ServiceNow · AWS Cloud · Python · Generative AI. Each orbiting body is a real mission: an internship, a hackathon, a credential earned along the way.</div>
+    </div>
+    <div id="header-right">
+      <button class="pill-btn" id="owner-toggle-btn">Owner mode</button>
+    </div>
+  </div>
+
+  <div id="orbit-container">
+    <div id="orbit-system"></div>
+  </div>
+
+  <div id="legend">
+    <div class="legend-row"><span class="dot education"></span>Education</div>
+    <div class="legend-row"><span class="dot internship"></span>Internship</div>
+    <div class="legend-row"><span class="dot hackathon"></span>Hackathon</div>
+    <div class="legend-row"><span class="dot certification"></span>Certification</div>
+    <div class="legend-row"><span class="dot project"></span>Project</div>
+  </div>
+
+  <div id="empty-hint">Toggle Owner mode to add a planet for every certification, project, or milestone.</div>
+  <div id="loading-msg">Loading mission data…</div>
+
+  <div id="detail-panel">
+    <button class="close-btn" id="panel-close">✕</button>
+    <div id="panel-content"></div>
+  </div>
+
+  <div id="lock-overlay">
+    <div id="lock-box">
+      <div class="eyebrow">Owner Access</div>
+      <h3>Enter mission key</h3>
+      <input type="password" id="lock-input" placeholder="Password" autocomplete="off">
+      <div class="err" id="lock-err"></div>
+      <div class="lock-actions">
+        <button class="btn" id="lock-cancel">Cancel</button>
+        <button class="btn primary" id="lock-submit">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="add-overlay">
+    <div id="add-box">
+      <div class="eyebrow" id="form-eyebrow">New Transmission</div>
+      <h3 id="form-title">Add a planet</h3>
+      <input type="hidden" id="edit-id">
+      <div class="field">
+        <label>Category</label>
+        <select id="f-category">
+          <option value="certification">Certification</option>
+          <option value="project">Project</option>
+          <option value="hackathon">Hackathon</option>
+          <option value="internship">Internship</option>
+          <option value="education">Education</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="f-title" placeholder="e.g. AWS Cloud Foundations">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Issuer / Org</label>
+          <input type="text" id="f-org" placeholder="e.g. AWS Academy">
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="text" id="f-date" placeholder="e.g. Oct 2024">
+        </div>
+      </div>
+      <div class="field">
+        <label>What I did / learned</label>
+        <textarea id="f-desc" placeholder="A few lines about it..."></textarea>
+      </div>
+      <div class="field">
+        <label>Image (optional)</label>
+        <input type="file" id="f-image" accept="image/*">
+        <img id="img-preview">
+      </div>
+      <div class="form-actions">
+        <button class="btn danger" id="form-delete" style="display:none;">Delete</button>
+        <button class="btn" id="form-cancel">Cancel</button>
+        <button class="btn primary" id="form-save">Save planet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const OWNER_PASSWORD = "kirthishri2026";
+  const STORAGE_KEY = "mission-planets";
+  const SUN_LABEL = "KJ";
+
+  const SEED_PLANETS = [
+    {
+      id: "edu-btech",
+      category: "education",
+      title: "B.Tech, AI & Data Science",
+      org: "Panimalar Engineering College, Chennai",
+      date: "2022 — 2026",
+      desc: "Four years building the foundation: data structures, machine learning, and a steady pull toward systems that connect software to the real world. This orbit is where everything else launched from.",
+      image: null,
+      size: 30,
+      orbitRadius: 130,
+      orbitDuration: 38,
+      startAngle: 40
+    },
+    {
+      id: "intern-avasoft",
+      category: "internship",
+      title: "Engineer Intern",
+      org: "AVASOFT",
+      date: "Dec 2025 — Jun 2026",
+      desc: "A six-month run through enterprise engineering: ServiceNow across ITSM, CSM, FSM, SOM and CPQ, plus REST API integrations linking ServiceNow to PagerDuty. Spent time in Postman and JSON, paired with Jira-driven Agile teams, and came out of it understanding how real businesses automate their workflows — not just how to write code that compiles.",
+      image: null,
+      size: 34,
+      orbitRadius: 210,
+      orbitDuration: 52,
+      startAngle: 190
+    },
+    {
+      id: "hack-sih",
+      category: "hackathon",
+      title: "SIH 2024 Finalist — Hardware Wallet Security",
+      org: "Smart India Hackathon",
+      date: "2024",
+      desc: "Led the team behind a hardware security system for blockchain wallets, built around an Arduino Nano, a 4x4 keypad for PIN entry, and an LCD readout for live status. Coordinated the build end to end, from wiring the breadboard to keeping the team aligned under deadline pressure. Reached the national finals.",
+      image: "PLANET_IMG_hack-sih",
+      size: 30,
+      orbitRadius: 290,
+      orbitDuration: 66,
+      startAngle: 300
+    }
+  ];
+
+  const SEED_CERTS = [
+    { title:"AWS Academy Cloud Foundations", org:"AWS Academy", date:"Oct 2024", desc:"20-hour foundations course covering core AWS services, cloud economics, and the building blocks of cloud architecture.", img:"PLANET_IMG_cert-aws" },
+    { title:"Data Science Internship", org:"Corizo", date:"Sep — Oct 2024", desc:"Applied data science internship — moved from coursework into hands-on, mentor-guided project work.", img:"PLANET_IMG_cert-corizo-intern" },
+    { title:"Data Science Training", org:"Corizo", date:"Aug — Sep 2024", desc:"Foundational training in data science: the groundwork that led directly into the Corizo internship.", img:"PLANET_IMG_cert-corizo-train" },
+    { title:"Java 17 Masterclass", org:"Udemy", date:"Sep 2024", desc:"135.5-hour deep dive into modern Java, from core syntax through to the language features introduced up to Java 17.", img:"PLANET_IMG_cert-java" },
+    { title:"Introduction to Automation Testing", org:"Great Learning Academy", date:"Sep 2024", desc:"Introductory course on automation testing principles and where they fit in a modern QA pipeline.", img:"PLANET_IMG_cert-autotest" },
+    { title:"Cybersecurity Analysis & Design — Gold", org:"NASSCOM FutureSkills Prime", date:"Jul 2024", desc:"Government-aligned assessment on cybersecurity analysis and design, cleared at Gold category with a 72.25% score.", img:"PLANET_IMG_cert-nasscom" },
+    { title:"Introduction to Cybersecurity", org:"Cisco Networking Academy", date:"Jul 2024", desc:"Covered global cyber threat patterns, network vulnerabilities, and Cisco's approach to threat detection and defense.", img:"PLANET_IMG_cert-cisco" },
+    { title:"Journey to Cloud: Envisioning Your Solution", org:"IBM SkillsBuild", date:"Sep 2024", desc:"IBM's framework for scoping and envisioning a cloud solution from the ground up, before a single resource is provisioned.", img:"PLANET_IMG_cert-ibm" }
+  ];
+
+  // distribute the certification belt across a steady ring
+  SEED_CERTS.forEach((c, i) => {
+    SEED_PLANETS.push({
+      id: "cert-" + i,
+      category: "certification",
+      title: c.title,
+      org: c.org,
+      date: c.date,
+      desc: c.desc,
+      image: c.img,
+      size: 18,
+      orbitRadius: 370,
+      orbitDuration: 90 + i * 6,
+      startAngle: (360 / SEED_CERTS.length) * i
+    });
+  });
+
+  let planets = [];
+  let isOwner = false;
+  let storageReady = false;
+
+  // ---------- Starfield ----------
+  function buildStarfield(){
+    const field = document.getElementById('starfield');
+    const count = 140;
+    for(let i=0;i<count;i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2 + 0.6;
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = (Math.random()*100) + '%';
+      s.style.top = (Math.random()*100) + '%';
+      s.style.animation = `twinkle ${(Math.random()*4+2).toFixed(1)}s ease-in-out infinite`;
+      s.style.animationDelay = (Math.random()*4) + 's';
+      field.appendChild(s);
+    }
+  }
+
+  // ---------- Storage ----------
+  async function loadPlanets(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        planets = JSON.parse(raw);
+      } else {
+        planets = SEED_PLANETS.slice();
+        await savePlanets();
+      }
+    }catch(e){
+      planets = SEED_PLANETS.slice();
+      try{ await savePlanets(); }catch(e2){ /* ignore */ }
+    }
+    storageReady = true;
+    document.getElementById('loading-msg').style.display = 'none';
+    renderOrbits();
+  }
+
+  async function savePlanets(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(planets));
+    }catch(e){
+      console.error('Storage save failed', e);
+      alert('Could not save — your browser storage may be full (large images take up space). Try a smaller image.');
+    }
+  }
+
+  // ---------- Orbit rendering ----------
+  function renderOrbits(){
+    const sys = document.getElementById('orbit-system');
+    sys.innerHTML = '';
+
+    // sun
+    const sun = document.createElement('div');
+    sun.className = 'sun';
+    sun.innerHTML = `<span class="sun-label">${SUN_LABEL}</span>`;
+    sun.addEventListener('click', () => openSunPanel());
+    sys.appendChild(sun);
+
+    // group by orbit radius to draw rings once
+    const radii = [...new Set(planets.map(p=>p.orbitRadius))];
+    radii.forEach(r => {
+      const ring = document.createElement('div');
+      ring.className = 'orbit-path';
+      ring.style.width = (r*2) + 'px';
+      ring.style.height = (r*1.45) + 'px';
+      sys.appendChild(ring);
+    });
+
+    planets.forEach(p => {
+      const wrap = document.createElement('div');
+      wrap.className = 'planet-wrap';
+
+      const motion = document.createElement('div');
+      motion.className = 'planet-orbit-motion cat-' + p.category;
+      const animName = 'orbit-' + p.id.replace(/[^a-zA-Z0-9]/g,'');
+      injectOrbitKeyframes(animName, p.orbitRadius, p.startAngle);
+      motion.style.animationName = animName;
+      motion.style.animationDuration = p.orbitDuration + 's';
+
+      const planet = document.createElement('div');
+      planet.className = 'planet';
+      planet.style.width = p.size + 'px';
+      planet.style.height = p.size + 'px';
+
+      if(p.category === 'hackathon' || p.category === 'project'){
+        const ring = document.createElement('div');
+        ring.className = 'ring';
+        ring.style.width = (p.size + 14) + 'px';
+        ring.style.height = (p.size * 0.4) + 'px';
+        ring.style.top = (p.size/2 - p.size*0.2) + 'px';
+        ring.style.left = -7 + 'px';
+        planet.appendChild(ring);
+      }
+
+      const tag = document.createElement('div');
+      tag.className = 'planet-tag';
+      tag.textContent = p.title.length > 28 ? p.title.slice(0,26)+'…' : p.title;
+      wrap.appendChild(tag);
+
+      planet.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDetailPanel(p);
+      });
+
+      motion.appendChild(planet);
+      wrap.appendChild(motion);
+      sys.appendChild(wrap);
+    });
+  }
+
+  const injectedAnims = new Set();
+  function injectOrbitKeyframes(name, radius, startAngle){
+    if(injectedAnims.has(name)) return;
+    injectedAnims.add(name);
+    const styleTag = document.createElement('style');
+    const ry = radius * 0.725;
+    const steps = 8;
+    let kf = '';
+    for(let i=0;i<=steps;i++){
+      const pct = (i/steps)*100;
+      const angle = (startAngle + (i/steps)*360) * Math.PI/180;
+      const x = Math.cos(angle)*radius;
+      const y = Math.sin(angle)*ry;
+      kf += `${pct}% { transform: translate(${x.toFixed(1)}px, ${y.toFixed(1)}px); }\n`;
+    }
+    styleTag.textContent = `@keyframes ${name} { ${kf} }`;
+    document.head.appendChild(styleTag);
+  }
+
+  // ---------- Detail panel ----------
+  const categoryLabels = {
+    education:'Education', internship:'Internship', hackathon:'Hackathon',
+    certification:'Certification', project:'Project'
+  };
+
+  function openSunPanel(){
+    const panel = document.getElementById('detail-panel');
+    const content = document.getElementById('panel-content');
+    content.innerHTML = `
+      <div class="cat-tag" style="color:var(--gold); border-color:var(--gold-dim);">Mission Commander</div>
+      <h2>Kirthishri Jeevanandam</h2>
+      <div class="meta">B.Tech AI & Data Science · Chennai</div>
+      <div class="desc">Software Engineer with hands-on experience across ServiceNow (ITSM, CSM, FSM, SOM, CPQ), AWS Cloud, Python, and REST API integrations. SIH 2024 Finalist and team lead, currently seeking roles in Software Engineering, Cloud, and Enterprise Automation.
+
+Every body orbiting this sun is a real milestone — click one to read the mission report.</div>
+    `;
+    panel.classList.add('open');
+  }
+
+  function openDetailPanel(p){
+    const panel = document.getElementById('detail-panel');
+    const content = document.getElementById('panel-content');
+    const imgHtml = p.image ? `<img src="${resolveImage(p.image)}" alt="${escapeHtml(p.title)}">` : '';
+    const editBtn = isOwner ? `<button class="btn" id="panel-edit-btn">Edit</button>` : '';
+    content.innerHTML = `
+      <div class="cat-tag cat-${p.category}" style="color:${catColor(p.category)}; border-color:${catColor(p.category)}66;">${categoryLabels[p.category]}</div>
+      <h2>${escapeHtml(p.title)}</h2>
+      <div class="meta">${escapeHtml(p.org || '')}${p.date ? ' · '+escapeHtml(p.date) : ''}</div>
+      ${imgHtml}
+      <div class="desc">${escapeHtml(p.desc || '')}</div>
+      <div class="panel-actions">${editBtn}</div>
+    `;
+    panel.classList.add('open');
+    if(isOwner){
+      const btn = document.getElementById('panel-edit-btn');
+      if(btn) btn.addEventListener('click', () => { closeDetailPanel(); openForm(p); });
+    }
+  }
+
+  function closeDetailPanel(){
+    document.getElementById('detail-panel').classList.remove('open');
+  }
+
+  function catColor(cat){
+    return {
+      education:'#4FB8AE', internship:'#D9A24B', hackathon:'#C77B6F',
+      certification:'#8d93b8', project:'#6fae62'
+    }[cat] || '#E8E6E0';
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  // image storage: store small images inline as data URLs in a separate keyed bucket
+  const imageCache = {};
+  function resolveImage(key){
+    if(key && key.startsWith('data:')) return key;
+    return imageCache[key] || '';
+  }
+
+  async function loadImagesForSeeds(){
+    // images for seed certs are not bundled (no real files available) - left blank gracefully
+  }
+
+  // ---------- Owner mode ----------
+  function setOwnerUI(){
+    const btn = document.getElementById('owner-toggle-btn');
+    btn.textContent = isOwner ? 'Owner mode: ON' : 'Owner mode';
+    btn.classList.toggle('active', isOwner);
+    document.getElementById('empty-hint').style.display = isOwner ? 'block' : 'none';
+    renderAddTrigger();
+  }
+
+  let addTriggerEl = null;
+  function renderAddTrigger(){
+    if(addTriggerEl){ addTriggerEl.remove(); addTriggerEl = null; }
+    if(!isOwner) return;
+    addTriggerEl = document.createElement('button');
+    addTriggerEl.className = 'pill-btn';
+    addTriggerEl.textContent = '+ Add planet';
+    addTriggerEl.style.marginLeft = '0';
+    addTriggerEl.addEventListener('click', () => openForm(null));
+    document.getElementById('header-right').appendChild(addTriggerEl);
+  }
+
+  document.getElementById('owner-toggle-btn').addEventListener('click', () => {
+    if(isOwner){
+      isOwner = false;
+      setOwnerUI();
+    } else {
+      document.getElementById('lock-overlay').classList.add('open');
+      document.getElementById('lock-input').value = '';
+      document.getElementById('lock-err').textContent = '';
+      document.getElementById('lock-input').focus();
+    }
+  });
+
+  document.getElementById('lock-cancel').addEventListener('click', () => {
+    document.getElementById('lock-overlay').classList.remove('open');
+  });
+  document.getElementById('lock-submit').addEventListener('click', attemptUnlock);
+  document.getElementById('lock-input').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') attemptUnlock();
+  });
+  function attemptUnlock(){
+    const val = document.getElementById('lock-input').value;
+    if(val === OWNER_PASSWORD){
+      isOwner = true;
+      document.getElementById('lock-overlay').classList.remove('open');
+      setOwnerUI();
+    } else {
+      document.getElementById('lock-err').textContent = 'Incorrect key. Try again.';
+    }
+  }
+
+  // ---------- Add / Edit form ----------
+  function openForm(existing){
+    const overlay = document.getElementById('add-overlay');
+    document.getElementById('edit-id').value = existing ? existing.id : '';
+    document.getElementById('form-title').textContent = existing ? 'Edit planet' : 'Add a planet';
+    document.getElementById('form-eyebrow').textContent = existing ? 'Update Transmission' : 'New Transmission';
+    document.getElementById('f-category').value = existing ? existing.category : 'certification';
+    document.getElementById('f-title').value = existing ? existing.title : '';
+    document.getElementById('f-org').value = existing ? (existing.org||'') : '';
+    document.getElementById('f-date').value = existing ? (existing.date||'') : '';
+    document.getElementById('f-desc').value = existing ? (existing.desc||'') : '';
+    document.getElementById('f-image').value = '';
+    const preview = document.getElementById('img-preview');
+    if(existing && existing.image && existing.image.startsWith('data:')){
+      preview.src = existing.image;
+      preview.style.display = 'block';
+    } else {
+      preview.style.display = 'none';
+      preview.src = '';
+    }
+    document.getElementById('form-delete').style.display = existing ? 'inline-block' : 'none';
+    overlay.classList.add('open');
+  }
+
+  function closeForm(){
+    document.getElementById('add-overlay').classList.remove('open');
+  }
+
+  document.getElementById('form-cancel').addEventListener('click', closeForm);
+
+  document.getElementById('f-image').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const preview = document.getElementById('img-preview');
+      preview.src = ev.target.result;
+      preview.style.display = 'block';
+      preview.dataset.dataurl = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function nextOrbitForCategory(cat){
+    const radiusMap = { education:130, internship:210, hackathon:290, project:330, certification:370 };
+    const base = radiusMap[cat] || 370;
+    const existing = planets.filter(p => p.orbitRadius === base);
+    const angle = existing.length ? (existing.length * (360/(existing.length+3))) : 0;
+    return { radius: base, angle: angle, duration: 70 + existing.length*5 };
+  }
+
+  document.getElementById('form-save').addEventListener('click', async () => {
+    const id = document.getElementById('edit-id').value;
+    const title = document.getElementById('f-title').value.trim();
+    if(!title){ alert('Please give it a title.'); return; }
+    const category = document.getElementById('f-category').value;
+    const org = document.getElementById('f-org').value.trim();
+    const date = document.getElementById('f-date').value.trim();
+    const desc = document.getElementById('f-desc').value.trim();
+    const preview = document.getElementById('img-preview');
+    const imageData = preview.dataset.dataurl || (preview.style.display === 'block' ? preview.src : null);
+
+    if(id){
+      const existing = planets.find(p => p.id === id);
+      if(existing){
+        existing.title = title;
+        existing.category = category;
+        existing.org = org;
+        existing.date = date;
+        existing.desc = desc;
+        if(imageData) existing.image = imageData;
+      }
+    } else {
+      const orbit = nextOrbitForCategory(category);
+      const sizeMap = { education:30, internship:34, hackathon:30, project:26, certification:18 };
+      const newPlanet = {
+        id: 'p-' + Date.now(),
+        category, title, org, date, desc,
+        image: imageData || null,
+        size: sizeMap[category] || 20,
+        orbitRadius: orbit.radius,
+        orbitDuration: orbit.duration,
+        startAngle: orbit.angle
+      };
+      planets.push(newPlanet);
+    }
+    await savePlanets();
+    closeForm();
+    renderOrbits();
+  });
+
+  document.getElementById('form-delete').addEventListener('click', async () => {
+    const id = document.getElementById('edit-id').value;
+    if(!id) return;
+    if(!confirm('Delete this planet permanently?')) return;
+    planets = planets.filter(p => p.id !== id);
+    await savePlanets();
+    closeForm();
+    renderOrbits();
+  });
+
+  // ---------- Misc events ----------
+  document.getElementById('panel-close').addEventListener('click', closeDetailPanel);
+  document.getElementById('orbit-container').addEventListener('click', (e) => {
+    if(e.target.id === 'orbit-container') closeDetailPanel();
+  });
+
+  // ---------- Init ----------
+  buildStarfield();
+  setOwnerUI();
+  loadPlanets();
+
+})();
+</script>
+</body>
+</html>
